@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8" ?>
+  <modification>
+	<name>Account Login Captcha</name>
+	<code>account_login_captcha</code>
+	<version>v302.1</version>
+	<author>ME</author>
+
+	<!-- Admin -->
+	<file path="admin/controller/common/login.php">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				data['forgotten'] =
+			]]></search>
+			<add position="after" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+				$data['account_login_captcha'] = $this->config->get($prefix . 'account_login_captcha_status');
+				$data['account_login_captcha_admin_login_status'] = $this->config->get($prefix . 'account_login_captcha_admin_login_status');
+				$data['alc_site_key'] = $this->config->get($prefix . 'account_login_captcha_site_key');
+				// end
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				function validate() {
+			]]></search>
+			<add position="after" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$language = (isset($this->session->data['language'])) ? $this->session->data['language'] : $this->config->get('config_language');
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+
+				if ($this->config->get($prefix . 'account_login_captcha_status') && $this->config->get($prefix . 'account_login_captcha_admin_login_status')) {
+					$secret_key = $this->config->get($prefix . 'account_login_captcha_secret_key');
+					$error_message = $this->config->get($prefix . 'account_login_captcha_error_message_' . $language);
+					$recaptcha = json_decode(file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($secret_key) . '&response=' . (isset($this->request->post['g-recaptcha-response']) ? $this->request->post['g-recaptcha-response'] : '') . '&remoteip=' . $this->request->server['REMOTE_ADDR']), true);
+				} else {
+					$recaptcha['success'] = true;
+				}
+
+				if (!$recaptcha['success']) {
+					$this->error['warning'] = $error_message;
+				} else
+				// end
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="admin/view/template/common/login.tpl">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				$text_forgotten
+			]]></search>
+			<add position="after" offset="1" trim="true"><![CDATA[
+				<!-- Clear Thinking: Account Login Captcha -->
+				<?php if ($account_login_captcha && $account_login_captcha_admin_login_status) { ?>
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+					<div class="g-recaptcha" data-sitekey="<?php echo $alc_site_key; ?>" data-expired-callback="grecaptcha.reset()"></div>
+				<?php } ?>
+				<!-- end -->
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="admin/view/template/common/login.twig">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				{{ text_forgotten }}
+			]]></search>
+			<add position="after" offset="1" trim="true"><![CDATA[
+				<!-- Clear Thinking: Account Login Captcha -->
+				{% if account_login_captcha && account_login_captcha_admin_login_status %}
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+					<div class="g-recaptcha" data-sitekey="{{ alc_site_key }}" data-expired-callback="grecaptcha.reset()"></div>
+				{% endif %}
+				<!-- end -->
+			]]></add>
+		</operation>
+	</file>
+
+	<!-- Catalog -->
+	<file path="catalog/controller/account/login.php">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				data['forgotten'] =
+			]]></search>
+			<add position="after" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+				$data['account_login_captcha'] = $this->config->get($prefix . 'account_login_captcha_status');
+				$data['alc_site_key'] = $this->config->get($prefix . 'account_login_captcha_site_key');
+				// end
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				if (!$this->customer->login($this->request->post['email'], $this->request->post['password'])) {
+			]]></search>
+			<add position="before" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$language = (isset($this->session->data['language'])) ? $this->session->data['language'] : $this->config->get('config_language');
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+
+				if ($this->config->get($prefix . 'account_login_captcha_status')) {
+					$secret_key = $this->config->get($prefix . 'account_login_captcha_secret_key');
+					$error_message = $this->config->get($prefix . 'account_login_captcha_error_message_' . $language);
+					$recaptcha = json_decode(file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($secret_key) . '&response=' . (isset($this->request->post['g-recaptcha-response']) ? $this->request->post['g-recaptcha-response'] : '') . '&remoteip=' . $this->request->server['REMOTE_ADDR']), true);
+				} else {
+					$recaptcha['success'] = true;
+				}
+
+				if (!$recaptcha['success']) {
+					if (isset($this->error)) $this->error['warning'] = $error_message;
+					if (isset($json)) $json['error']['warning'] = $error_message;
+				} else
+				// end
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="catalog/controller/checkout/login.php">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				data['forgotten'] =
+			]]></search>
+			<add position="after" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+				$data['account_login_captcha'] = $this->config->get($prefix . 'account_login_captcha_status');
+				$data['alc_site_key'] = $this->config->get($prefix . 'account_login_captcha_site_key');
+				// end
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				if (!$this->customer->login($this->request->post['email'], $this->request->post['password'])) {
+			]]></search>
+			<add position="before" trim="true"><![CDATA[
+				// Clear Thinking: Account Login Captcha
+				$language = (isset($this->session->data['language'])) ? $this->session->data['language'] : $this->config->get('config_language');
+				$prefix = (version_compare(VERSION, '3.0', '<')) ? '' : 'module_';
+
+				if ($this->config->get($prefix . 'account_login_captcha_status')) {
+					$secret_key = $this->config->get($prefix . 'account_login_captcha_secret_key');
+					$error_message = $this->config->get($prefix . 'account_login_captcha_error_message_' . $language);
+					$recaptcha = json_decode(file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($secret_key) . '&response=' . (isset($this->request->post['g-recaptcha-response']) ? $this->request->post['g-recaptcha-response'] : '') . '&remoteip=' . $this->request->server['REMOTE_ADDR']), true);
+				} else {
+					$recaptcha['success'] = true;
+				}
+
+				if (!$recaptcha['success']) {
+					if (isset($this->error)) $this->error['warning'] = $error_message;
+					if (isset($json)) $json['error']['warning'] = $error_message;
+				} else
+				// end
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="catalog/view/theme/*/template/account/login.tpl">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				value="<?php echo $button_login; ?>"
+			]]></search>
+			<add position="before" trim="true"><![CDATA[
+				<!-- Clear Thinking: Account Login Captcha -->
+				<?php if ($account_login_captcha) { ?>
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+					<div class="g-recaptcha" data-sitekey="<?php echo $alc_site_key; ?>" data-expired-callback="grecaptcha.reset()"></div>
+					<br />
+				<?php } ?>
+				<!-- end -->
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="catalog/view/theme/*/template/checkout/login.tpl">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				value="<?php echo $button_login; ?>"
+			]]></search>
+			<add position="before" trim="true"><![CDATA[
+				<!-- Clear Thinking: Account Login Captcha -->
+				<?php if ($account_login_captcha) { ?>
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+					<div class="g-recaptcha" data-sitekey="<?php echo $alc_site_key; ?>" data-expired-callback="grecaptcha.reset()"></div>
+					<br />
+				<?php } ?>
+				<!-- end -->
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="catalog/view/theme/*/template/*/login.twig">
+		<operation error="skip">
+			<search trim="true"><![CDATA[
+				value="{{ button_login }}"
+			]]></search>
+			<add position="before" trim="true"><![CDATA[
+				<!-- Clear Thinking: Account Login Captcha -->
+				{% if account_login_captcha %}
+					<script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+					<div class="g-recaptcha" data-sitekey="{{ alc_site_key }}" data-expired-callback="grecaptcha.reset()"></div>
+					<br />
+				{% endif %}
+				<!-- end -->
+			]]></add>
+		</operation>
+	</file>
+
+</modification>
